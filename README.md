@@ -27,7 +27,7 @@ pip install .
 
 ### Create a New Feed
 ```bash
-link create --file feed.xml \
+rssgen create --file feed.xml \
             --title "My Podcast" \
             --link "https://podcast.yourdomain.com" \
             --description "A great podcast" \
@@ -38,7 +38,7 @@ link create --file feed.xml \
 
 ### Add Episode to Feed
 ```bash
-link add --file feed.xml \
+rssgen add --file feed.xml \
          --title "Episode 1" \
          --link "https://podcast.yourdomain.com/ep1" \
          --description "First episode" \
@@ -48,7 +48,7 @@ link add --file feed.xml \
 ### Optional Conversion
 Convert MP4 to MP3 or combine MP3 with an image into MP4:
 ```bash
-link add --file feed.xml \
+rssgen add --file feed.xml \
          --title "Episode 2" \
          --link "https://podcast.yourdomain.com/ep2" \
          --description "Video episode" \
