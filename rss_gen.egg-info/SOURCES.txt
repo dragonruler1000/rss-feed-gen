@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+rss_gen.egg-info/PKG-INFO
+rss_gen.egg-info/SOURCES.txt
+rss_gen.egg-info/dependency_links.txt
+rss_gen.egg-info/entry_points.txt
+rss_gen.egg-info/requires.txt
+rss_gen.egg-info/top_level.txt
+rssfeedgen/__init__.py
+rssfeedgen/fg.py

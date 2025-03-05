@@ -1,0 +1,21 @@
+[project]
+name = "rss-gen"
+version = "0.1.0"
+description = "RSS Feed Generator for Podcasts with optional media conversion"
+authors = [
+    {name = "Zachariah Jackson", email = "rssgen@me.minecraftchest2.us"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.8"
+dependencies = [
+    "feedgen>=0.9.0",
+    "requests>=2.0.0",
+    "xmltodict>=0.13.0"
+]
+
+[project.scripts]
+rssgen = "gf:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
