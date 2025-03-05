@@ -18,7 +18,7 @@ pip install rss-gen
 
 ### From Source
 ```bash
-git clone https://github.com/dragonruler1000/rss-gen.git
+git clone https://github.com/dragonruler1000/rss-feed-gen.git
 cd link-rss-gen
 pip install .
 ```
