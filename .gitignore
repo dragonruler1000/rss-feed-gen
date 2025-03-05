@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+.env/
+
+# Build files
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+
+# IDE Files
+.vscode/
+.idea/
+
+# GitHub Workflow Cache
+.github/workflows/
+
+# Misc
+*.bak
+.DS_Store
+*.swp
+
