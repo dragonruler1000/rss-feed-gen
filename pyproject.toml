@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rssgen = "rssfeedgen.gf:main"
+rssgen = "gf:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]
