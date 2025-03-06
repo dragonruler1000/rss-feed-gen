@@ -13,7 +13,7 @@ RSS Generator is a command-line tool that creates RSS feeds for podcasts, with o
 
 ### From PyPI
 ```bash
-pip install rss-gen
+pip install rss-feed-gen
 ```
 
 ### From Source
