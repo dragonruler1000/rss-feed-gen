@@ -1,6 +1,6 @@
 [project]
 name = "rss-feed-gen"
-version = "0.1.4"
+version = "0.1.5"
 description = "RSS Feed Generator for Podcasts with optional media conversion"
 authors = [
     {name = "Zachariah Jackson", email = "rssgen@me.minecraftchest2.us"}
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rssgen = "gf:main"
+rssgen = "main:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]
