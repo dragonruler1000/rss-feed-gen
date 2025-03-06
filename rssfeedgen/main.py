@@ -115,7 +115,10 @@ def add_item(feed_file, title, link, description, file_path, format=None, image=
     tree.write(feed_file, encoding="utf-8", xml_declaration=True)
     print(f"✅ Added new episode: {title}")
 
-if __name__ == "__main__":
+def main():
+    """
+    CLI entry point for the RSS Feed Generator.
+    """
     parser = argparse.ArgumentParser(description="RSS Feed Generator for Podcasts")
     parser.add_argument("action", choices=["create", "add"], help="Create a new feed or add an episode")
     parser.add_argument("--file", required=True, help="Path to the RSS feed file")
@@ -142,3 +145,6 @@ if __name__ == "__main__":
             print("❌ Error: --title, --link, --description, and --audio are required for adding an episode.")
         else:
             add_item(args.file, args.title, args.link, args.description, args.audio, args.format, args.image, args.pubdate)
+
+if __name__ == "__main__":
+    main()
