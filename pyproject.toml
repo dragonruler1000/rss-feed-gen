@@ -1,6 +1,6 @@
 [project]
 name = "rss-feed-gen"
-version = "0.1.6"
+version = "0.1.7"
 description = "RSS Feed Generator for Podcasts with optional media conversion"
 authors = [
     {name = "Zachariah Jackson", email = "rssgen@me.minecraftchest2.us"}
