@@ -11,6 +11,15 @@ RSS Generator is a command-line tool that creates RSS feeds for podcasts, with o
 
 ## Installation
 
+### Set Up vetrial envirement
+```bash
+sudo python -m venv /path/to/new/virtual/environment
+```
+### Enter venv
+```bash
+. /path/to/vitrual/enviroment/bin/activate
+```
+
 ### From PyPI
 ```bash
 pip install rss-feed-gen
