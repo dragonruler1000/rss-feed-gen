@@ -96,8 +96,11 @@ rssgen edit --file feed.xml \
 ## 🧠 Enable Tab Completion (Optional)
 
 ```bash
-pip install argcomplete
+pip install argcomplete #shoud be installed by default
 activate-global-python-argcomplete --user
+# To source the file
+source ~/.bashrc    # if you use bash
+source ~/.zshrc     # if you use zsh
 # OR for bash only:
 eval "$(register-python-argcomplete rssgen)"
 ```
