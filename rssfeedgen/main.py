@@ -31,9 +31,9 @@ def convert_media(input_file, format, image=None):
     output_file = os.path.join(save_dir, os.path.basename(input_file).rsplit('.', 1)[0] + (".mp3" if format == "audio" else ".mp4"))
     
     if format == "audio":
-        cmd = ["ffmpeg", "-i", input_file, "-q:a", "0", "-map", "a", output_file]
+        cmd = ["ffmpeg", "-hide_banner", "-i", input_file, "-q:a", "0", "-map", "a", output_file]
     elif format == "video" and image:
-        cmd = ["ffmpeg", "-loop", "1", "-i", image, "-i", input_file,
+        cmd = ["ffmpeg", "-hide_banner", "-loop", "1", "-i", image, "-i", input_file,
                "-c:v", "libx264", "-tune", "stillimage", "-c:a", "aac", "-b:a", "192k", "-shortest", output_file]
     else:
         return input_file  # Return original if no conversion needed
