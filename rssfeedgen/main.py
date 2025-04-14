@@ -8,10 +8,33 @@ from datetime import UTC
 import requests
 from xml.etree import ElementTree as ET
 
+# Optional: Tab-completion support
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
+
+def download_if_url(path):
+    """
+    Downloads a remote file if given a URL and returns the local path.
+    """
+    if path.startswith("http://") or path.startswith("https://"):
+        local_name = os.path.join("/tmp", os.path.basename(path))
+        if not os.path.exists(local_name):  # Don't download again if already present
+            print(f"⬇️ Downloading {path} ...")
+            r = requests.get(path, stream=True)
+            if r.status_code == 200:
+                with open(local_name, 'wb') as f:
+                    for chunk in r.iter_content(1024 * 1024):
+                        f.write(chunk)
+            else:
+                raise Exception(f"Failed to download {path} (status {r.status_code})")
+        return local_name
+    return path
+
+
 def get_audio_metadata(file_path):
-    """
-    Fetches the content length and MIME type of an audio file.
-    """
     try:
         length = str(os.path.getsize(file_path))
         mime_type = "audio/mpeg" if file_path.endswith(".mp3") else "video/mp4"
@@ -20,24 +43,31 @@ def get_audio_metadata(file_path):
         print(f"⚠️ Error fetching metadata for {file_path}: {e}")
         return "0", "audio/mpeg"
 
+
 def convert_media(input_file, format, image=None):
-    """
-    Converts MP4 to MP3 (audio-only) or combines MP3 with an image into MP4.
-    Saves the file in a directory structure matching the URL path.
-    """
+    input_file = download_if_url(input_file)
+    if image:
+        image = download_if_url(image)
+
     url_path = '/'.join(input_file.split('/')[3:-1])
     save_dir = os.path.join(os.getcwd(), url_path)
     os.makedirs(save_dir, exist_ok=True)
     output_file = os.path.join(save_dir, os.path.basename(input_file).rsplit('.', 1)[0] + (".mp3" if format == "audio" else ".mp4"))
-    
+
     if format == "audio":
-        cmd = ["ffmpeg", "-hide_banner", "-i", input_file, "-q:a", "0", "-map", "a", output_file]
+        cmd = ["ffmpeg", "-hide_banner", "-y", "-i", input_file, "-q:a", "0", "-map", "a", output_file]
     elif format == "video" and image:
-        cmd = ["ffmpeg", "-hide_banner", "-loop", "1", "-i", image, "-i", input_file,
-               "-c:v", "libx264", "-tune", "stillimage", "-c:a", "aac", "-b:a", "192k", "-shortest", output_file]
+        cmd = [
+            "ffmpeg", "-hide_banner", "-y", "-loop", "1", "-framerate", "2", "-i", image,
+            "-i", input_file,
+            "-vf", "scale=1280:720",
+            "-c:v", "libx264", "-preset", "fast", "-tune", "stillimage",
+            "-c:a", "aac", "-b:a", "192k",
+            "-shortest", "-pix_fmt", "yuv420p", output_file
+        ]
     else:
-        return input_file  # Return original if no conversion needed
-    
+        return input_file  # No conversion needed
+
     try:
         subprocess.run(cmd, check=True)
         return output_file
@@ -45,92 +75,113 @@ def convert_media(input_file, format, image=None):
         print(f"⚠️ Error during conversion: {e}")
         return input_file
 
+
 def create_feed(feed_file, title, link, description, owner_name, owner_email, image_url):
-    """
-    Creates a new RSS feed with iTunes-specific metadata.
-    """
     fg = FeedGenerator()
     fg.title(title)
     fg.link(href=link, rel='self')
     fg.description(description)
     fg.image(image_url)
-    
-    # Add iTunes metadata
+
     fg.load_extension('podcast')
     fg.podcast.itunes_author(owner_name)
     fg.podcast.itunes_owner(owner_name, owner_email)
 
-    # Generate feed string
     fg.rss_file(feed_file, pretty=True)
-    
+
     if os.path.exists(feed_file):
         print(f"✅ RSS feed successfully created: {feed_file}")
     else:
         print("❌ Error: Feed file was not created.")
 
+
 def add_item(feed_file, title, link, description, file_path, format=None, image=None, pubdate=None):
-    """
-    Adds a new episode entry to the RSS feed.
-    """
     if not os.path.exists(feed_file):
         print("⚠️ Feed file does not exist. Creating a new one...")
-        create_feed(feed_file, "My Podcast", "https://podcast.yourdomain.com", "A great podcast", "Owner Name", "owner@example.com", "https://example.com/podcast.jpg")
-    
-    # Determine format based on file extension if not provided
+        create_feed(feed_file, "My Podcast", "https://example.com", "A great podcast", "Owner", "owner@example.com", "https://example.com/image.jpg")
+
     if format is None:
         format = "audio" if file_path.endswith(".mp3") else "video"
-    
+
     converted_file = convert_media(file_path, format, image)
-    
-    # Ensure file was actually created
     if not os.path.exists(converted_file):
         print(f"❌ Error: Converted file was not created: {converted_file}")
         return
-    
-    # Parse existing feed
-    tree = ET.parse(feed_file)
-    root = tree.getroot()
-    channel = root.find("channel")
 
-    # Fetch audio metadata
+    try:
+        tree = ET.parse(feed_file)
+        root = tree.getroot()
+        channel = root.find("channel")
+    except ET.ParseError as e:
+        print(f"❌ Error: Failed to parse feed file '{feed_file}': {e}")
+        return
+
     length, mime_type = get_audio_metadata(converted_file)
 
-    # Create new item element
     item = ET.Element("item")
     ET.SubElement(item, "title").text = title
-    ET.SubElement(item, "link").text = converted_file
+    ET.SubElement(item, "link").text = link
     ET.SubElement(item, "description").text = description
     ET.SubElement(item, "pubDate").text = pubdate if pubdate else email.utils.format_datetime(datetime.now(UTC))
 
-    # Add enclosure for podcast episode
     enclosure = ET.SubElement(item, "enclosure")
-    enclosure.set("url", converted_file)
+    enclosure.set("url", link)
     enclosure.set("length", length)
     enclosure.set("type", mime_type)
 
-    # Append new item to channel
     channel.append(item)
-
-    # Save updated feed
     tree.write(feed_file, encoding="utf-8", xml_declaration=True)
     print(f"✅ Added new episode: {title}")
 
+
+def edit_item(feed_file, old_title, new_title=None, new_link=None, new_description=None, new_pubdate=None):
+    if not os.path.exists(feed_file):
+        print("❌ Error: Feed file does not exist.")
+        return
+
+    tree = ET.parse(feed_file)
+    root = tree.getroot()
+    channel = root.find("channel")
+    items = channel.findall("item")
+
+    for item in items:
+        title_elem = item.find("title")
+        if title_elem is not None and title_elem.text == old_title:
+            if new_title:
+                title_elem.text = new_title
+            if new_link:
+                item.find("link").text = new_link
+                enclosure = item.find("enclosure")
+                if enclosure is not None:
+                    enclosure.set("url", new_link)
+            if new_description:
+                item.find("description").text = new_description
+            if new_pubdate:
+                item.find("pubDate").text = new_pubdate
+
+            tree.write(feed_file, encoding="utf-8", xml_declaration=True)
+            print(f"✅ Updated episode: {old_title}")
+            return
+    print(f"❌ Error: Episode with title '{old_title}' not found.")
+
+
 def main():
-    """
-    CLI entry point for the RSS Feed Generator.
-    """
     parser = argparse.ArgumentParser(description="RSS Feed Generator for Podcasts")
-    parser.add_argument("action", choices=["create", "add"], help="Create a new feed or add an episode")
+    parser.add_argument("action", choices=["create", "add", "edit"], help="Create a feed, add an episode, or edit an episode")
     parser.add_argument("--file", required=True, help="Path to the RSS feed file")
     parser.add_argument("--title", help="Title of the feed or episode")
     parser.add_argument("--link", help="Link of the feed or episode")
     parser.add_argument("--description", help="Description of the feed or episode")
-    parser.add_argument("--audio", help="Path to the audio or video file")
-    parser.add_argument("--format", choices=["audio", "video"], help="Optional: Convert MP4 to MP3 (audio) or combine MP3 with image into MP4 (video)")
+    parser.add_argument("--audio", help="Path or URL to the audio or video file")
+    parser.add_argument("--format", choices=["audio", "video"], help="Convert to audio-only or video with image")
     parser.add_argument("--image", help="Image file for video conversion")
-    parser.add_argument("--pubdate", help="Publication date for episode (RFC 2822 format)")
-    parser.add_argument("--owner_name", help="Name of the podcast owner")
-    parser.add_argument("--owner_email", help="Email address of the podcast owner")
+    parser.add_argument("--pubdate", help="Publication date (RFC 2822 format)")
+    parser.add_argument("--owner_name", help="Podcast owner's name (for create)")
+    parser.add_argument("--owner_email", help="Podcast owner's email (for create)")
+    parser.add_argument("--old_title", help="Old title to edit (for edit mode)")
+
+    if argcomplete:
+        argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
 
@@ -145,6 +196,13 @@ def main():
             print("❌ Error: --title, --link, --description, and --audio are required for adding an episode.")
         else:
             add_item(args.file, args.title, args.link, args.description, args.audio, args.format, args.image, args.pubdate)
+
+    elif args.action == "edit":
+        if not args.old_title:
+            print("❌ Error: --old_title is required for editing an episode.")
+        else:
+            edit_item(args.file, args.old_title, args.title, args.link, args.description, args.pubdate)
+
 
 if __name__ == "__main__":
     main()
