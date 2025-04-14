@@ -7,12 +7,7 @@ import email.utils
 from datetime import UTC
 import requests
 from xml.etree import ElementTree as ET
-
-# Optional: Tab-completion support
-try:
-    import argcomplete
-except ImportError:
-    argcomplete = None
+import argcomplete
 
 
 def download_if_url(path):
@@ -179,9 +174,8 @@ def main():
     parser.add_argument("--owner_name", help="Podcast owner's name (for create)")
     parser.add_argument("--owner_email", help="Podcast owner's email (for create)")
     parser.add_argument("--old_title", help="Old title to edit (for edit mode)")
-
-    if argcomplete:
-        argcomplete.autocomplete(parser)
+    
+    argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
 
