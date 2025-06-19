@@ -1,3 +1,4 @@
+</br><img src="https://profile-counter.glitch.me/Dragonruler1000-rss-gen/count.svg" alt="Visitor Counter"/>
 # RSS Generator
 
 **RSS Generator** is a command-line tool for creating and managing podcast RSS feeds with built-in media conversion. It supports both audio and video formats, auto-generates iTunes-compatible metadata, and allows full control over feed entries — all from your terminal.
